@@ -1,0 +1,24 @@
+*.pyc
+__pycache__
+.DS_Store
+.DS_Store
+
+
+# 忽略 COSMIC 下的大数据文件夹
+COSMIC/erc-training/data/
+
+# 额外保险：忽略所有 zip 压缩包和大型数据后缀
+*.zip
+*.tar.gz
+*.7z
+*.rar
+*.dat
+*.npy
+*.pth
+
+
+# 忽略词向量和特征文件
+*.txt
+*.pkl
+*.csv
+
