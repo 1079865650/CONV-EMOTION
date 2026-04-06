@@ -13,10 +13,12 @@ def split():
 
     video_ids, video_speakers, video_labels, video_text, \
         video_audio, video_visual, video_sentence, trainVids, \
-        test_vids = pickle.load(open('data/iemocap/IEMOCAP_features.pkl', 'rb'), encoding='latin1')
+        test_vids = pickle.load(open('/home/rock/project/conv-emotion/data/DialogueRNN_features/IEMOCAP_features/IEMOCAP_features_raw.pkl', 'rb'), encoding='latin1')
+        # test_vids = pickle.load(open('data/iemocap/IEMOCAP_features.pkl', 'rb'), encoding='latin1')
 
     train, dev, test = [], [], []
     dev_size = int(len(trainVids) * 0.1)
+    trainVids = sorted(list(trainVids))
     train_vids, dev_vids = trainVids[dev_size:], trainVids[:dev_size]
 
     for vid in tqdm(train_vids, desc="train"):

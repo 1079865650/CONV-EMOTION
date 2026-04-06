@@ -5,7 +5,7 @@ __pycache__
 
 
 # 忽略 COSMIC 下的大数据文件夹
-COSMIC/erc-training/data/
+COSMIC/data/
 
 # 额外保险：忽略所有 zip 压缩包和大型数据后缀
 *.zip

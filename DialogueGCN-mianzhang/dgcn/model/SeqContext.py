@@ -19,7 +19,7 @@ class SeqContext(nn.Module):
     def forward(self, text_len_tensor, text_tensor):
         packed = pack_padded_sequence(
             text_tensor,
-            text_len_tensor,
+            text_len_tensor.cpu(),
             batch_first=True,
             enforce_sorted=False
         )
