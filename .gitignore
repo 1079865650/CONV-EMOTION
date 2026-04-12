@@ -22,3 +22,5 @@ COSMIC/data/
 *.pkl
 *.csv
 
+*.pt
+*.log

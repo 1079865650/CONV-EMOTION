@@ -6,26 +6,30 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 class TextGuidedAttention(nn.Module):
     def __init__(self, dim=1024, num_heads=8):
         super(TextGuidedAttention, self).__init__()
-        # PyTorch 自带的多头注意力机制
         self.attn_audio = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
         self.attn_video = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
         
-        # 降维层：把拼接后的 3072 维压回 1024 维，方便无缝接入后面的 RNN
-        self.fusion_linear = nn.Linear(dim * 3, dim)
-        self.relu = nn.ReLU()
+        # 【修改点1】只对音频和视频的融合结果进行降维，保护原始文本
+        self.fusion_linear = nn.Linear(dim * 2, dim) 
+        
+        # 【修改点2】引入 LayerNorm，替换掉会抹杀负数的 ReLU
+        self.layer_norm = nn.LayerNorm(dim)
 
     def forward(self, text, audio, video):
-        # 文本作为 Query 引导音频和视觉
+        # 1. 文本作为 Query 引导音频和视觉
         audio_aware, _ = self.attn_audio(query=text, key=audio, value=audio)
         video_aware, _ = self.attn_video(query=text, key=video, value=video)
         
-        # 拼接特征 [batch, seq_len, 3072]
-        concat_feat = torch.cat([text, audio_aware, video_aware], dim=-1)
+        # 2. 【核心优化】只把提取到的音视频有效信息拼接并降维
+        # 维度变化: [batch, seq_len, 2048] -> [batch, seq_len, 1024]
+        av_feat = self.fusion_linear(torch.cat([audio_aware, video_aware], dim=-1))
         
-        # 融合降维 [batch, seq_len, 1024]
-        final_feat = self.relu(self.fusion_linear(concat_feat))
+        # 3. 【绝对防御：残差连接】(非常关键！)
+        # 把原始的、纯净的 RoBERTa 文本特征，直接加上音视频的辅助特征
+        # 这样即使音视频全是垃圾，模型大不了把 av_feat 变成 0，保底还有纯文本特征！
+        final_feat = self.layer_norm(text + av_feat)
+        
         return final_feat
-# ==========================================================
 
 class SeqContext(nn.Module):
     def __init__(self, u_dim, g_dim, args):
@@ -47,7 +51,16 @@ class SeqContext(nn.Module):
     def forward(self, text_len_tensor, text_tensor, audio_tensor, video_tensor):
         
         # 1. 在进入序列模型前，先进行跨模态融合！
+        # ❌ 1. 把你加的高大上的跨模态注意力融合给“注释掉”（封印你的绝招）
         fused_tensor = self.cross_modal_attn(text_tensor, audio_tensor, video_tensor)
+
+        # ✅ 2. 换成最粗暴的直接拼接 (text, audio, video 拼在一起，维度变成 3072)
+        # ✅ 3. 借用注意力模块里的降维层，强行把 3072 维压回 1024 维，防止后面的 RNN 报错
+        # raw_concat = torch.cat([text_tensor, audio_tensor, video_tensor], dim=-1)
+        # fused_tensor = self.cross_modal_attn.relu(self.cross_modal_attn.fusion_linear(raw_concat))
+
+        # 只用文本特征，不适用特征融合
+        # fused_tensor  = text_tensor
 
         # 2. 将融合后高维特征打包送入 RNN（这里用 fused_tensor 替换了原来的 text_tensor）
         packed = pack_padded_sequence(

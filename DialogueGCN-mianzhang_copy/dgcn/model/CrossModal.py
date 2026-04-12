@@ -4,14 +4,13 @@ import torch.nn as nn
 class TextGuidedAttention(nn.Module):
     def __init__(self, dim=1024, num_heads=8):
         super(TextGuidedAttention, self).__init__()
-        # 使用 PyTorch 自带的多头注意力机制
+        # 调用的多头注意力函数
         # batch_first=True 非常重要，它让输入维度保持 [batch_size, seq_len, dim]
         self.attn_audio = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
         self.attn_video = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
         
-        # 融合降维层：这是为了不给后面的 GCN 添麻烦。
-        # 如果我们拼接 3 个 1024，就变成了 3072 维，后面网络可能吃不消。
-        # 我们用一个线性层把它重新压缩回 1024 维。
+
+        # 把文本，音频，视觉三个1024维，但是显卡比较有压力，所以压缩回1024维   
         self.fusion_linear = nn.Linear(dim * 3, dim)
         self.relu = nn.ReLU()
 
