@@ -19,11 +19,16 @@ class DialogueGCN(nn.Module):
         u_dim = 1024 
         # ==============================================
         
+        # g_dim = 200
+        # h1_dim = 100
+        # h2_dim = 100
+        # hc_dim = 100
         g_dim = 200
-        h1_dim = 100
-        h2_dim = 100
-        hc_dim = 100
+        h1_dim = args.hidden_size
+        h2_dim = args.hidden_size
+        hc_dim = args.hidden_size
         tag_size = 6
+        log.info(f"\n{'='*20} Dimensions {'='*20}\ng_dim: {g_dim}, h1_dim: {h1_dim}, h2_dim: {h2_dim}, hc_dim: {hc_dim}\nInput (u_dim): 1024\n{'='*50}")
 
         self.wp = args.wp
         self.wf = args.wf
