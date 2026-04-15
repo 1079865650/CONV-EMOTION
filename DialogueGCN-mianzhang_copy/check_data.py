@@ -1,15 +1,38 @@
 import pickle
-import dgcn # 必须导入，否则读不了 dgcn.Sample 对象
+import torch
+import os
 
-# 读取你刚才训练用的那个 pkl 文件
-data = pickle.load(open('data/iemocap/ckpt/data.pkl', 'rb'))
+# 1. 使用绝对路径，确保在哪运行都能找到
+path = '/home/rock/project/conv-emotion/DialogueGCN-mianzhang/data/iemocap/ckpt/data.pkl'
 
-# 提取测试集中所有对话的 ID
-test_vids = [sample.vid for sample in data['test']]
+if not os.path.exists(path):
+    print(f"错误：找不到文件 {path}，请检查路径是否正确！")
+else:
+    with open(path, 'rb') as f:
+        # 关键点：加上 encoding='latin1' 解决报错
+        data = pickle.load(f, encoding='latin1')
 
-# 提取出所有的 Session 前缀 (比如 'Ses01', 'Ses05') 并去重
-sessions = set([vid[:5] for vid in test_vids])
+    print("数据集包含的键:", data.keys())
 
-print("============== 审查结果 ==============")
-print(f"你的测试集里包含了以下 Session 的数据: {sorted(list(sessions))}")
-print("======================================")
+    # 2. 查看样本维度
+    # 注意：根据你之前 preprocess.py 的逻辑，data 是一个字典，包含 'train', 'dev', 'test'
+    train_data = data['train']
+    sample = train_data[0]
+
+    print("\n--- 第一条样本信息 ---")
+    # 打印 sample 对象的所有属性，看看哪个是特征
+    print("样本属性:", dir(sample))
+    
+    # 尝试打印 text 特征的维度
+    # 在 DialogueGCN 中，特征通常叫 text, visual, audio
+    if hasattr(sample, 'text'):
+        feat = torch.tensor(sample.text)
+        print(f"文本特征 (text) 维度: {feat.shape}")
+    
+    if hasattr(sample, 'visual'):
+        v_feat = torch.tensor(sample.visual)
+        print(f"视觉特征 (visual) 维度: {v_feat.shape}")
+
+    if hasattr(sample, 'audio'):
+        a_feat = torch.tensor(sample.audio)
+        print(f"音频特征 (audio) 维度: {a_feat.shape}")

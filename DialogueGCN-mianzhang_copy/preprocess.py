@@ -9,7 +9,8 @@ def split():
     dgcn.utils.set_seed(args.seed)
 
     # 1. 加载原始数据
-    path = '/home/rock/project/conv-emotion/data/erc-training/iemocap/iemocap_features_roberta.pkl'
+    # path = '/home/rock/project/conv-emotion/data/erc-training/iemocap/iemocap_features_roberta.pkl'
+    path = '/home/rock/project/conv-emotion/data/erc-training/iemocap/iemocap_features_whisper_roberta.pkl'
     raw_data = pickle.load(open(path, 'rb'), encoding='latin1')
     print(f"😎 成功读取！新数据集里共有 {len(raw_data)} 个大项元素！")
 

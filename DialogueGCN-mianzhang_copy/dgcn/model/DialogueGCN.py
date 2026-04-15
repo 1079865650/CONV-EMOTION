@@ -16,7 +16,11 @@ class DialogueGCN(nn.Module):
         
         # ================= 核心修改点 =================
         # 这里的 u_dim 必须从 100 改为 1024，匹配你的 RoBERTa/Wav2Vec 特征维度！
-        u_dim = 1024 
+        text_dim = 1024 
+        audio_dim = 1280
+        visual_dim = 512
+        # u_dim = text_dim + audio_dim + visual_dim
+        u_dim = 1024
         # ==============================================
         
         # g_dim = 200
@@ -29,6 +33,7 @@ class DialogueGCN(nn.Module):
         hc_dim = args.hidden_size
         tag_size = 6
         log.info(f"\n{'='*20} Dimensions {'='*20}\ng_dim: {g_dim}, h1_dim: {h1_dim}, h2_dim: {h2_dim}, hc_dim: {hc_dim}\nInput (u_dim): 1024\n{'='*50}")
+        log.info(f"Input (u_dim) Total: {u_dim} (T:{text_dim}+A:{audio_dim}+V:{visual_dim})")
 
         self.wp = args.wp
         self.wf = args.wf
@@ -50,13 +55,31 @@ class DialogueGCN(nn.Module):
     def get_rep(self, data):
         # ================= 核心修改点 =================
         # 原版这里只传了 text_tensor。现在我们把 audio 和 video 也传进去！
+        # node_features = self.rnn(
+        #     data["text_len_tensor"], 
+        #     data["text_tensor"],
+        #     data["audio_tensor"],   
+        #     data["video_tensor"]   
+        # ) 
+        # ==============================================
+
+        # ================= 核心修改点 2 =================
+        # 获取各模态特征
+        t = data["text_tensor"]    # [batch, seq, 1024]
+        a = data["audio_tensor"]   # [batch, seq, 1280]
+        v = data["video_tensor"]   # [batch, seq, 512]
+
+        # 在最后一个维度进行拼接，形成多模态特征向量
+        # 拼接后的维度变为 [batch, seq, 2816] (1024+1280+512)
+        multimodal_features = torch.cat([t, a, v], dim=-1)
+
         node_features = self.rnn(
             data["text_len_tensor"], 
-            data["text_tensor"],
-            data["audio_tensor"],   # 新增传入音频
-            data["video_tensor"]    # 新增传入视觉
-        ) 
-        # ==============================================
+            data["text_tensor"],   # 1024 维
+            data["audio_tensor"],  # 1280 维
+            data["video_tensor"]   # 512 维
+        )
+        # ===============================================
 
         features, edge_index, edge_norm, edge_type, edge_index_lengths = batch_graphify(
             node_features, data["text_len_tensor"], data["speaker_tensor"], self.wp, self.wf,

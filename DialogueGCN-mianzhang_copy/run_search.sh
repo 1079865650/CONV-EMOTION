@@ -22,7 +22,7 @@ do
         echo "=========================================" | tee -a $LOG_FILE
         
         # 执行训练脚本，并将输出追加到统一的日志文件中
-        python train.py --data data/iemocap/ckpt/iemocap_roberta_1024_v1.pkl \
+        python train.py --data data/iemocap/iemocap_whisper_final.pkl \
                         --device cuda \
                         --epochs 60 \
                         --batch_size 32 \

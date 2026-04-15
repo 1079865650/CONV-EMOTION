@@ -33,8 +33,10 @@ class Dataset:
             # ================= 核心修改 1：改维度，加张量 =================
             feat_dim = 1024  # 把焊死的 100 改成 1024！
             text_tensor = torch.zeros((batch_size, mx, feat_dim))
-            audio_tensor = torch.zeros((batch_size, mx, feat_dim)) # 新增音频占位
-            video_tensor = torch.zeros((batch_size, mx, feat_dim)) # 新增视觉占位
+            # audio_tensor = torch.zeros((batch_size, mx, feat_dim))
+            # video_tensor = torch.zeros((batch_size, mx, feat_dim)) 
+            audio_tensor = torch.zeros((batch_size, mx, 1280)).float()
+            video_tensor = torch.zeros((batch_size, mx, 1024)).float()
             # ==============================================================
 
             speaker_tensor = torch.zeros((batch_size, mx)).long()

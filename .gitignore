@@ -24,3 +24,4 @@ COSMIC/data/
 
 *.pt
 *.log
+DialogueGCN-mianzhang_copy/save/model.pt
