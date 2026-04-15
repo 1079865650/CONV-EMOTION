@@ -22,6 +22,9 @@ COSMIC/data/
 *.pkl
 *.csv
 
-*.pt
 *.log
-DialogueGCN-mianzhang_copy/save/model.pt
+
+save/
+*.pt
+*.pkl
+log/
